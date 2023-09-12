@@ -171,9 +171,9 @@ class LinkStateRouting {
     
     public void printRoutingTable() {
         for (Node node : network.values()) {
-            System.out.println("Routing table for Node " + node.getName() + ":");
+            System.out.println("\nRouting table for Node " + node.getName() + ":");
             for (String neighborName : node.getNeighbors().keySet()) {
-                System.out.println("To Node " + neighborName + " via " + neighborName +
+                System.out.println(" Node " + node.getName() + " to " + neighborName +
                                    ", Distance: " + shortestPaths.get(node.getName()).get(neighborName));
             }
             System.out.println();
