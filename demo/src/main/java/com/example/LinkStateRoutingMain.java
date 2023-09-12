@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jxmpp.stringprep.XmppStringprepException;
 
 class Node {
@@ -65,6 +66,12 @@ class LinkStateRouting {
         network.put(nodeName, node);
     }
 
+    private ComunicacionXMPP xmpp;
+
+    public LinkStateRouting(ComunicacionXMPP xmpp) {
+        this.xmpp = xmpp;
+    }
+
     public boolean isValidNode(String nodeName) {
         return network.containsKey(nodeName);
     }
@@ -96,31 +103,45 @@ class LinkStateRouting {
         System.out.println("Sending packet from " + sourceNode + " to " + destinationNode);
         System.out.println(packet.toJson());
         System.out.println();
-    }
 
-    public void sendMessage(String sourceNode, String destinationNode, String message) {
-    String shortestPath = findShortestPath(sourceNode, destinationNode);
+        // Send the message using the ComunicacionXMPP instance
+        Node source = getNode(sourceNode);
+        Node destination = getNode(destinationNode);
+        String destinationEmailAddress = destination.getEmailAddress() + "@alumchat.xyz"; // Append the domain
 
-    if (shortestPath.equals("No path found.")) {
-        System.out.println("No path found for sending the message.");
-    } else {
-        String[] pathNodes = shortestPath.split(" -> ");
-        int hopCount = 1;
-        
-        System.out.println("Sending message from " + sourceNode + " to " + destinationNode + " through path: " + shortestPath);
-
-        for (int i = 0; i < pathNodes.length - 1; i++) {
-            String currentNode = pathNodes[i];
-            String nextNode = pathNodes[i + 1];
-            
-            sendPacket(currentNode, nextNode, hopCount, message);
-            hopCount++;
+        try {
+            xmpp.iniciarChat(destinationEmailAddress);
+            xmpp.enviarMensaje(destinationEmailAddress, packet.toJson()); // Pass both recipient and message
+            xmpp.cerrarChat();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Failed to send message via XMPP.");
         }
     }
+
+
+
+    public void sendMessage(String sourceNode, String destinationNode, String message) {
+        String shortestPath = findShortestPath(sourceNode, destinationNode);
+
+        if (shortestPath.equals("No path found.")) {
+            System.out.println("No path found for sending the message.");
+        } else {
+            String[] pathNodes = shortestPath.split(" -> ");
+            int hopCount = 1;
+            
+            System.out.println("Sending message from " + sourceNode + " to " + destinationNode + " through path: " + shortestPath);
+
+            for (int i = 0; i < pathNodes.length - 1; i++) {
+                String currentNode = pathNodes[i];
+                String nextNode = pathNodes[i + 1];
+                
+                sendPacket(currentNode, nextNode, hopCount, message);
+                hopCount++;
+            }
+        }
     }
 
-
-    
     private Map<String, Integer> computeShortestPath(Node sourceNode) {
         PriorityQueue<NodeDistance> pq = new PriorityQueue<>();
         pq.offer(new NodeDistance(sourceNode, 0));
@@ -218,7 +239,7 @@ class LinkStateRouting {
 }
 
 public class LinkStateRoutingMain {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NotConnectedException, InterruptedException {
         Scanner scanner = new Scanner(System.in);
 
         System.out.print("XMPP Username: ");
@@ -245,7 +266,7 @@ public class LinkStateRoutingMain {
                 return;
             }
 
-            LinkStateRouting router = new LinkStateRouting();
+            LinkStateRouting router = new LinkStateRouting(xmpp);
 
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
@@ -305,7 +326,6 @@ public class LinkStateRoutingMain {
                 }
 
                 String message = "Hola mundo";
-
                 router.sendMessage(sourceNode, destinationNode, message);
             } catch (IOException e) {
                 e.printStackTrace();

@@ -27,6 +27,7 @@ public class ComunicacionXMPP {
                 .setPort(port)
                 .setXmppDomain(domain)
                 .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled)
+                .setConnectTimeout(10000) // Increase the timeout to 10 seconds
                 .build();
 
         connection = new XMPPTCPConnection(config);
@@ -68,7 +69,7 @@ public class ComunicacionXMPP {
 
     }
 
-    public void enviarMensaje(String message) throws SmackException.NotConnectedException, InterruptedException {
+    public void enviarMensaje(String message, String message2) throws SmackException.NotConnectedException, InterruptedException {
         Message newMessage = new Message();
         newMessage.setBody(message);
         chat.send(newMessage);
