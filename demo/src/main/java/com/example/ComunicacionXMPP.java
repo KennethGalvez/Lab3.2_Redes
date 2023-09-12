@@ -55,7 +55,7 @@ public class ComunicacionXMPP {
 // Logic to start a chat with a recipient
     public void iniciarChat(String recipient) throws SmackException.NotConnectedException, XmppStringprepException, InterruptedException {
         ChatManager chatManager = ChatManager.getInstanceFor(connection);
-        EntityBareJid jid = JidCreate.entityBareFrom(recipient + "@alumchat.xyz"); //Addres of the other user
+        EntityBareJid jid = JidCreate.entityBareFrom(recipient ); //Addres of the other user
         chat = chatManager.chatWith(jid);
 
         // listener to incoming message
