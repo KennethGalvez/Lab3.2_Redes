@@ -300,32 +300,57 @@ public class LinkStateRoutingMain {
                 }
 
                 router.computeShortestPaths();
-                router.printRoutingTable();
 
-                // Display available destination nodes excluding the source node (logged-in user)
-                System.out.println("Available destination nodes:");
-                for (String nodeName : router.getNodeNames()) {
-                    if (!nodeName.equals(sourceNode)) {
-                        Node node = router.getNode(nodeName);
-                        System.out.println(nodeName + " (" + node.getEmailAddress() + ")");
+                // Menú después de iniciar sesión
+                while (true) {
+                    System.out.println("\nMenú de opciones:");
+                    System.out.println("1. Mostrar nodos");
+                    System.out.println("2. Imprimir tablas");
+                    System.out.println("3. Enviar mensaje a nodo");
+                    System.out.println("4. Salir");
+                    System.out.print("Seleccione una opción: ");
+
+                    int opcion = scanner.nextInt();
+                    scanner.nextLine(); // Consumir el salto de línea
+
+                    switch (opcion) {
+                        case 1:
+                            // Mostrar nodos
+                            System.out.println("\nAvailable destination nodes:");
+                            for (String nodeName : router.getNodeNames()) {
+                                if (!nodeName.equals(sourceNode)) {
+                                    Node node = router.getNode(nodeName);
+                                    System.out.println(nodeName + " (" + node.getEmailAddress() + ")");
+                                }
+                            }
+                            break;
+                        case 2:
+                            // Imprimir tablas
+                            router.printRoutingTable();
+                            break;
+                        case 3:
+                            // Enviar mensaje a nodo
+                            System.out.print("Ingrese el nombre del nodo de destino: ");
+                            String destinationNode = scanner.nextLine();
+
+                            if (!router.isValidNode(destinationNode)) {
+                                System.out.println("Nodo de destino no válido.");
+                            } else if (destinationNode.equals(sourceNode)) {
+                                System.out.println("No puedes enviar un mensaje a ti mismo.");
+                            } else {
+                                System.out.print("Ingrese el mensaje a enviar: ");
+                                String message = scanner.nextLine();
+                                router.sendMessage(sourceNode, destinationNode, message);
+                            }
+                            break;
+                        case 4:
+                            // Salir del programa
+                            return;
+                        default:
+                            System.out.println("Opción no válida. Por favor, seleccione una opción válida.");
+                            break;
                     }
                 }
-                System.out.print("Enter destination node: ");
-                String destinationNode = scanner.nextLine();
-
-                if (!router.isValidNode(destinationNode)) {
-                    System.out.println("Invalid destination node. Exiting.");
-                    return;
-                }
-
-                // Check if the destination node is the same as the source node (logged-in user)
-                if (destinationNode.equals(sourceNode)) {
-                    System.out.println("Cannot send a message to yourself. Exiting.");
-                    return;
-                }
-
-                String message = "Hola mundo";
-                router.sendMessage(sourceNode, destinationNode, message);
             } catch (IOException e) {
                 e.printStackTrace();
             }
