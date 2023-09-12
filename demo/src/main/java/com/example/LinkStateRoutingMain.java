@@ -11,14 +11,20 @@ import org.jxmpp.stringprep.XmppStringprepException;
 
 class Node {
     private String name;
+    private String emailAddress; // Add an email address field
     private Map<String, Integer> neighbors = new HashMap<>();
     
-    public Node(String name) {
+    public Node(String name, String emailAddress) {
         this.name = name;
+        this.emailAddress = emailAddress;
     }
     
     public String getName() {
         return name;
+    }
+
+    public String getEmailAddress() {
+        return emailAddress;
     }
     
     public void addNeighbor(String neighborName, int distance) {
@@ -53,10 +59,20 @@ class Packet {
 class LinkStateRouting {
     private Map<String, Node> network = new HashMap<>();
     private Map<String, Map<String, Integer>> shortestPaths = new HashMap<>();
-    
-    public void addNode(Node node) {
-        network.put(node.getName(), node);
+
+    public void addNode(String nodeName, String emailAddress) {
+        Node node = new Node(nodeName, emailAddress);
+        network.put(nodeName, node);
     }
+
+    public boolean isValidNode(String nodeName) {
+        return network.containsKey(nodeName);
+    }
+
+    public Set<String> getNodeNames() {
+        return network.keySet();
+    }
+
     
     public void computeShortestPaths() {
         for (Node node : network.values()) {
@@ -203,41 +219,37 @@ class LinkStateRouting {
 public class LinkStateRoutingMain {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-                
+
         System.out.print("XMPP Username: ");
         String username = scanner.nextLine();
-        
+
         System.out.print("XMPP Password: ");
         String password = scanner.nextLine();
-        
+
         ComunicacionXMPP xmpp = null;
-        
+
         try {
             xmpp = new ComunicacionXMPP("alumchat.xyz", 5222, "alumchat.xyz");
             boolean loggedIn = xmpp.iniciarSesion(username, password);
-            
+
             if (!loggedIn) {
                 System.out.println("Login failed. Exiting.");
                 return;
             }
-            
+
             LinkStateRouting router = new LinkStateRouting();
 
             try {
-                // Read node information from JSON file
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode nodeData = objectMapper.readTree(new File("names1-x-randomX-2023.json"));
                 JsonNode configNode = nodeData.get("config");
 
-                // Create nodes from JSON data
                 Iterator<Map.Entry<String, JsonNode>> fields = configNode.fields();
                 while (fields.hasNext()) {
                     Map.Entry<String, JsonNode> entry = fields.next();
                     String nodeName = entry.getKey();
                     String email = entry.getValue().asText();
-                    Node node = new Node(nodeName);
-                    // You can do something with the email if needed
-                    router.addNode(node);
+                    router.addNode(nodeName, email); // Modify to accept email
                 }
 
                 // Read topology information from JSON file
@@ -258,14 +270,24 @@ public class LinkStateRoutingMain {
                         node.addNeighbor(neighborName, distance);
                     }
                 }
-
+                
                 router.computeShortestPaths();
                 router.printRoutingTable();
 
                 // Ask the user for the destination node
+                System.out.println("Available destination nodes:");
+                for (String nodeName : router.getNodeNames()) {
+                    Node node = router.getNode(nodeName);
+                    System.out.println(nodeName + " (" + node.getEmailAddress() + ")");
+                }
                 System.out.print("Enter destination node: ");
                 String destinationNode = scanner.nextLine();
-                
+
+                if (!router.isValidNode(destinationNode)) {
+                    System.out.println("Invalid destination node. Exiting.");
+                    return;
+                }
+
                 String sourceNode = username; // Set the source node to the logged-in user
                 String message = "Hola mundo";
 
