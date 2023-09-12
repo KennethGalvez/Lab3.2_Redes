@@ -316,12 +316,12 @@ public class LinkStateRoutingMain {
                     switch (opcion) {
                         case 1:
                             // Mostrar nodos
-                            System.out.println("\nAvailable destination nodes:");
+                            System.out.println("\nAvailable  nodes:");
                             for (String nodeName : router.getNodeNames()) {
-                                if (!nodeName.equals(sourceNode)) {
-                                    Node node = router.getNode(nodeName);
-                                    System.out.println(nodeName + " (" + node.getEmailAddress() + ")");
-                                }
+                                
+                                Node node = router.getNode(nodeName);
+                                System.out.println(nodeName + " (" + node.getEmailAddress() + ")");
+                              
                             }
                             break;
                         case 2:
