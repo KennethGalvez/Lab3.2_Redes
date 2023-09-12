@@ -147,6 +147,7 @@ class LinkStateRouting {
         
         return distanceMap;
     }
+
     
     public void printRoutingTable() {
         for (Node node : network.values()) {
@@ -179,17 +180,18 @@ class LinkStateRouting {
     }
     
     private String getPreviousNodeInPath(String sourceNode, String currentNode) {
-    int shortestDistance = shortestPaths.get(sourceNode).get(currentNode);
-    String previousNode = null;
+        int shortestDistance = shortestPaths.get(sourceNode).get(currentNode);
+        String previousNode = null;
 
-    for (Map.Entry<String, Integer> entry : shortestPaths.get(sourceNode).entrySet()) {
-        if (network.get(currentNode).getNeighbors().containsKey(entry.getKey()) && entry.getValue() + network.get(currentNode).getNeighbors().get(entry.getKey()) == shortestDistance) {
-            previousNode = entry.getKey();
-            break;
+        for (Map.Entry<String, Integer> entry : shortestPaths.get(sourceNode).entrySet()) {
+            if (network.get(currentNode).getNeighbors().containsKey(entry.getKey()) && entry.getValue() + network.get(currentNode).getNeighbors().get(entry.getKey()) == shortestDistance) {
+                previousNode = entry.getKey();
+                break;
+            }
         }
+        return previousNode;
     }
-    return previousNode;
-    }
+
 
     private static class NodeDistance implements Comparable<NodeDistance> {
         private Node node;
@@ -215,7 +217,6 @@ class LinkStateRouting {
     }
 }
 
-
 public class LinkStateRoutingMain {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -234,6 +235,13 @@ public class LinkStateRoutingMain {
 
             if (!loggedIn) {
                 System.out.println("Login failed. Exiting.");
+                return;
+            }
+
+            // Read the username-to-node mapping from names1-x-randomX-2023.json
+            String sourceNode = getUsernameMapping(username);
+            if (sourceNode == null) {
+                System.out.println("Invalid username. Exiting.");
                 return;
             }
 
@@ -270,15 +278,17 @@ public class LinkStateRoutingMain {
                         node.addNeighbor(neighborName, distance);
                     }
                 }
-                
+
                 router.computeShortestPaths();
                 router.printRoutingTable();
 
-                // Ask the user for the destination node
+                // Display available destination nodes excluding the source node (logged-in user)
                 System.out.println("Available destination nodes:");
                 for (String nodeName : router.getNodeNames()) {
-                    Node node = router.getNode(nodeName);
-                    System.out.println(nodeName + " (" + node.getEmailAddress() + ")");
+                    if (!nodeName.equals(sourceNode)) {
+                        Node node = router.getNode(nodeName);
+                        System.out.println(nodeName + " (" + node.getEmailAddress() + ")");
+                    }
                 }
                 System.out.print("Enter destination node: ");
                 String destinationNode = scanner.nextLine();
@@ -288,7 +298,12 @@ public class LinkStateRoutingMain {
                     return;
                 }
 
-                String sourceNode = username; // Set the source node to the logged-in user
+                // Check if the destination node is the same as the source node (logged-in user)
+                if (destinationNode.equals(sourceNode)) {
+                    System.out.println("Cannot send a message to yourself. Exiting.");
+                    return;
+                }
+
                 String message = "Hola mundo";
 
                 router.sendMessage(sourceNode, destinationNode, message);
@@ -303,5 +318,30 @@ public class LinkStateRoutingMain {
             }
             scanner.close();
         }
+    }
+
+    // Function to get the node name based on the entered username
+    private static String getUsernameMapping(String enteredUsername) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode nodeData = objectMapper.readTree(new File("names1-x-randomX-2023.json"));
+            JsonNode configNode = nodeData.get("config");
+
+            Iterator<Map.Entry<String, JsonNode>> fields = configNode.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> entry = fields.next();
+                String nodeName = entry.getKey();
+                String email = entry.getValue().asText();
+
+                // Check if the email address corresponds to the entered username
+                if (email.equals(enteredUsername + "@alumchat.xyz")) {
+                    return nodeName;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null; // Username not found in the mapping
     }
 }
