@@ -107,12 +107,11 @@ class LinkStateRouting {
         // Send the message using the ComunicacionXMPP instance
         Node source = getNode(sourceNode);
         Node destination = getNode(destinationNode);
-        String destinationEmailAddress = destination.getEmailAddress() + "@alumchat.xyz"; // Append the domain
+        String destinationEmailAddress = destination.getEmailAddress(); // Append the domain
 
         try {
             xmpp.iniciarChat(destinationEmailAddress);
             xmpp.enviarMensaje(destinationEmailAddress, packet.toJson()); // Pass both recipient and message
-            xmpp.cerrarChat();
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Failed to send message via XMPP.");
@@ -266,7 +265,7 @@ public class LinkStateRoutingMain {
                 return;
             }
 
-            LinkStateRouting router = new LinkStateRouting(xmpp);
+            LinkStateRouting router = new LinkStateRouting(xmpp); // Initialize with the ComunicacionXMPP instance
 
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
