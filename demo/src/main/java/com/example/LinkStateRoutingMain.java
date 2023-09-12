@@ -111,7 +111,7 @@ class LinkStateRouting {
 
         try {
             xmpp.iniciarChat(destinationEmailAddress);
-            xmpp.enviarMensaje(destinationEmailAddress, packet.toJson()); // Pass both recipient and message
+            xmpp.enviarMensaje(packet.toJson(), payload); // Pass both recipient and message
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Failed to send message via XMPP.");
