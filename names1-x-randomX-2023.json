@@ -1,5 +1,12 @@
 {
     "type": "names",
-    "config": {'A': 'gal20079@alumchat.xyz', 'B': 'ort20192@alumchat.xyz', 'C': 'ald20591@alumchat.xyz', 'D': 'rey20074@alumchat.xyz', 'E': 'gon20008@alumchat.xyz', 'F': 'smi20373@alumchat.xyz', 'G': 'gir20029@alumchat.xyz'
+    "config": {
+        "A": "gal20079@alumchat.xyz",
+        "B": "ort20192@alumchat.xyz",
+        "C": "ald20591@alumchat.xyz",
+        "D": "rey20074@alumchat.xyz",
+        "E": "gon20008@alumchat.xyz",
+        "F": "smi20373@alumchat.xyz",
+        "G": "gir20029@alumchat.xyz"
     }
 }

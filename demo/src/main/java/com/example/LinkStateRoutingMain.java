@@ -1,6 +1,13 @@
 package com.example;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
+
+import org.jxmpp.stringprep.XmppStringprepException;
 
 class Node {
     private String name;
@@ -56,6 +63,10 @@ class LinkStateRouting {
             Map<String, Integer> shortestPath = computeShortestPath(node);
             shortestPaths.put(node.getName(), shortestPath);
         }
+    }
+
+    public Node getNode(String nodeName) {
+        return network.get(nodeName);
     }
 
     public void sendPacket(String sourceNode, String destinationNode, int hopCount, String payload) {
@@ -164,9 +175,6 @@ class LinkStateRouting {
     return previousNode;
     }
 
-
-
-    
     private static class NodeDistance implements Comparable<NodeDistance> {
         private Node node;
         private int distance;
@@ -191,54 +199,87 @@ class LinkStateRouting {
     }
 }
 
+
 public class LinkStateRoutingMain {
     public static void main(String[] args) {
-        LinkStateRouting router = new LinkStateRouting();
+        Scanner scanner = new Scanner(System.in);
+                
+        System.out.print("XMPP Username: ");
+        String username = scanner.nextLine();
         
-        Node nodeA = new Node("A");
-        Node nodeB = new Node("B");
-        Node nodeC = new Node("C");
-        Node nodeD = new Node("D");
-        Node nodeE = new Node("E");
-        Node nodeF = new Node("F");
+        System.out.print("XMPP Password: ");
+        String password = scanner.nextLine();
         
-        nodeA.addNeighbor("B", 1);
-        nodeA.addNeighbor("C", 2);
+        ComunicacionXMPP xmpp = null;
         
-        nodeB.addNeighbor("A", 1);
-        nodeB.addNeighbor("C", 3);
-        nodeB.addNeighbor("D", 4);
-        
-        nodeC.addNeighbor("A", 2);
-        nodeC.addNeighbor("B", 3);
-        nodeC.addNeighbor("D", 2);
-        nodeC.addNeighbor("E", 5);
-        
-        nodeD.addNeighbor("B", 4);
-        nodeD.addNeighbor("C", 2);
-        nodeD.addNeighbor("E", 1);
-        
-        nodeE.addNeighbor("C", 5);
-        nodeE.addNeighbor("D", 1);
-        nodeE.addNeighbor("F", 3);
-        
-        nodeF.addNeighbor("E", 3);
-        
-        router.addNode(nodeA);
-        router.addNode(nodeB);
-        router.addNode(nodeC);
-        router.addNode(nodeD);
-        router.addNode(nodeE);
-        router.addNode(nodeF);
-        
-        router.computeShortestPaths();
-        router.printRoutingTable();
+        try {
+            xmpp = new ComunicacionXMPP("alumchat.xyz", 5222, "alumchat.xyz");
+            boolean loggedIn = xmpp.iniciarSesion(username, password);
+            
+            if (!loggedIn) {
+                System.out.println("Login failed. Exiting.");
+                return;
+            }
+            
+            LinkStateRouting router = new LinkStateRouting();
 
-        String sourceNode = "A";
-        String destinationNode = "F";
-        String message = "Hola mundo";
+            try {
+                // Read node information from JSON file
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode nodeData = objectMapper.readTree(new File("names1-x-randomX-2023.json"));
+                JsonNode configNode = nodeData.get("config");
 
-        router.sendMessage(sourceNode, destinationNode, message);
+                // Create nodes from JSON data
+                Iterator<Map.Entry<String, JsonNode>> fields = configNode.fields();
+                while (fields.hasNext()) {
+                    Map.Entry<String, JsonNode> entry = fields.next();
+                    String nodeName = entry.getKey();
+                    String email = entry.getValue().asText();
+                    Node node = new Node(nodeName);
+                    // You can do something with the email if needed
+                    router.addNode(node);
+                }
 
+                // Read topology information from JSON file
+                JsonNode topoData = objectMapper.readTree(new File("topo1-x-randomX-2023.json"));
+                JsonNode topoConfig = topoData.get("config");
+
+                // Create topology based on JSON data
+                Iterator<Map.Entry<String, JsonNode>> topoFields = topoConfig.fields();
+                while (topoFields.hasNext()) {
+                    Map.Entry<String, JsonNode> entry = topoFields.next();
+                    String nodeName = entry.getKey();
+                    JsonNode neighbors = entry.getValue();
+                    Node node = router.getNode(nodeName);
+
+                    for (JsonNode neighbor : neighbors) {
+                        String neighborName = neighbor.asText();
+                        int distance = 1; // You can adjust this distance as needed
+                        node.addNeighbor(neighborName, distance);
+                    }
+                }
+
+                router.computeShortestPaths();
+                router.printRoutingTable();
+
+                // Ask the user for the destination node
+                System.out.print("Enter destination node: ");
+                String destinationNode = scanner.nextLine();
+                
+                String sourceNode = username; // Set the source node to the logged-in user
+                String message = "Hola mundo";
+
+                router.sendMessage(sourceNode, destinationNode, message);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (xmpp != null) {
+                xmpp.cerrarConexion();
+            }
+            scanner.close();
+        }
     }
 }
