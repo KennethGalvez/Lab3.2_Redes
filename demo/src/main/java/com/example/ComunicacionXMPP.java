@@ -16,10 +16,10 @@ import org.jivesoftware.smack.packet.Message;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.impl.JidCreate;
 
-
 public class ComunicacionXMPP {
 
     private AbstractXMPPConnection connection;
+    private Chat chat;
 // Constructor to establish XMPP connection
     public ComunicacionXMPP(String host, int port, String domain) throws XmppStringprepException {
         XMPPTCPConnectionConfiguration config = XMPPTCPConnectionConfiguration.builder()
@@ -51,7 +51,6 @@ public class ComunicacionXMPP {
         }
     }
 
-    private Chat chat;
 // Logic to start a chat with a recipient
     public void iniciarChat(String recipient) throws SmackException.NotConnectedException, XmppStringprepException, InterruptedException {
         ChatManager chatManager = ChatManager.getInstanceFor(connection);
@@ -73,6 +72,17 @@ public class ComunicacionXMPP {
         Message newMessage = new Message();
         newMessage.setBody(message);
         chat.send(newMessage);
+    }
+    //Method to start listening for incoming messages
+    public void startListeningForMessages() {
+        ChatManager chatManager = ChatManager.getInstanceFor(connection);
+        chatManager.addIncomingListener(new IncomingChatMessageListener() {
+            @Override
+            public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
+                String body = message.getBody();
+                System.out.println("Incoming message from " + from + ": " + body);
+            }
+        });
     }
 
 

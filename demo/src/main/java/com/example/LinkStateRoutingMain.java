@@ -258,6 +258,9 @@ public class LinkStateRoutingMain {
                 return;
             }
 
+            // Start listening for incoming messages
+            xmpp.startListeningForMessages();
+
             // Read the username-to-node mapping from names1-x-randomX-2023.json
             String sourceNode = getUsernameMapping(username);
             if (sourceNode == null) {
