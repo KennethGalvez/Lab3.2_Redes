@@ -42,7 +42,7 @@ public class ComunicacionXMPP {
                 System.out.println("\n\nIncoming message from " + from + ": " + body + "\n");
             }
         });
-    }
+    }    
 
     // Logic to log in
     public boolean iniciarSesion(String username, String password) {

@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.util.*;
 
 import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.SmackException;
 import org.jxmpp.stringprep.XmppStringprepException;
+
 
 class Node {
     private String name;
@@ -92,26 +94,26 @@ class LinkStateRouting {
         return network.get(nodeName);
     }
 
-    public void sendPacket(String sourceNode, String destinationNode, int hopCount, String payload) {
+    public void sendPacket(String sourceNode, String destinationNode, int hopCount, String packetType, String packetPayload) {
         Map<String, String> headers = new HashMap<>();
         headers.put("from", sourceNode);
         headers.put("to", destinationNode);
         headers.put("hop_count", Integer.toString(hopCount));
-
-        Packet packet = new Packet("message", headers, payload);
-
+        
+        Packet packet = new Packet(packetType, headers, packetPayload); // Usar el tipo de paquete y payload proporcionados
+        
         System.out.println("Sending packet from " + sourceNode + " to " + destinationNode);
         System.out.println(packet.toJson());
         System.out.println();
-
+        
         // Send the message using the ComunicacionXMPP instance
         Node source = getNode(sourceNode);
         Node destination = getNode(destinationNode);
         String destinationEmailAddress = destination.getEmailAddress(); // Append the domain
-
+        
         try {
             xmpp.iniciarChat(destinationEmailAddress);
-            xmpp.enviarMensaje(packet.toJson(), payload); // Pass both recipient and message
+            xmpp.enviarMensaje(packet.toJson(), packetPayload); // Pass both recipient and message
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Failed to send message via XMPP.");
@@ -120,26 +122,123 @@ class LinkStateRouting {
 
 
 
-    public void sendMessage(String sourceNode, String destinationNode, String message) {
+
+    public void sendMessage(String sourceNode, String destinationNode, String message) throws XmppStringprepException {
+    // Solicitar al usuario el tipo de paquete a enviar
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Seleccione el tipo de paquete a enviar:");
+        System.out.println("1. Paquete ECHO");
+        System.out.println("2. Paquete DATA");
+        System.out.println("3. Paquete TABLE/INFO");
+        System.out.print("Ingrese el número correspondiente al tipo de paquete: ");
+
+        int packetTypeChoice = scanner.nextInt();
+        scanner.nextLine(); // Consumir el salto de línea
+
+        String packetType;
+        String packetPayload;
+
+        // Definir el tipo de paquete y su payload según la elección del usuario
+        switch (packetTypeChoice) {
+            case 1:
+                packetType = "ECHO";
+                long startTime = System.currentTimeMillis();
+                int delay = calculateDelayBetweenNodes(sourceNode, destinationNode);
+                packetPayload = "ECHO_DELAY: " + delay + " ms";
+                long endTime = System.currentTimeMillis();
+                long executionTime = endTime - startTime;
+                System.out.println("Tiempo de ejecución (ms): " + executionTime);
+                break;
+            case 2:
+                packetType = "DATA";
+                packetPayload = "DATA_MESSAGE: " + message;
+                break;
+            case 3:
+                packetType = "TABLE/INFO";
+                String routingTable = getRoutingTableAsString(sourceNode);
+                packetPayload = "ROUTING_TABLE:\n" + routingTable;
+                System.out.println("Tabla de enrutamiento:\n" + routingTable);
+                break;
+            default:
+                System.out.println("Opción no válida. Se enviará un paquete DATA por defecto.");
+                packetType = "DATA";
+                packetPayload = "DATA_MESSAGE: " + message;
+                break;
+        }
+
         String shortestPath = findShortestPath(sourceNode, destinationNode);
 
         if (shortestPath.equals("No path found.")) {
-            System.out.println("No path found for sending the message.");
+            System.out.println("No se encontró un camino para enviar el mensaje.");
         } else {
             String[] pathNodes = shortestPath.split(" -> ");
             int hopCount = 1;
-            
-            System.out.println("\nSending message from " + sourceNode + " to " + destinationNode + " through path: " + shortestPath);
+
+            System.out.println("\nEnviando mensaje desde " + sourceNode + " a " + destinationNode + " a través del camino: " + shortestPath);
 
             for (int i = 0; i < pathNodes.length - 1; i++) {
                 String currentNode = pathNodes[i];
                 String nextNode = pathNodes[i + 1];
-                
-                sendPacket(currentNode, nextNode, hopCount, message);
+
+                // Enviar el paquete con el tipo y payload correspondientes
+                sendPacket(currentNode, nextNode, hopCount, packetType, packetPayload);
                 hopCount++;
             }
         }
     }
+
+    // Función para calcular el delay entre nodos (simulación)
+    private int calculateDelayBetweenNodes(String sourceNode, String destinationNode) throws XmppStringprepException {
+        // Obtén el nodo de destino
+        Node destination = getNode(destinationNode);
+
+        if (destination == null) {
+            return -1; // Nodo de destino no encontrado
+        }
+
+        try {
+            // Inicia un chat con el nodo de destino
+            xmpp.iniciarChat(destination.getEmailAddress());
+
+            // Envía un mensaje vacío para medir el tiempo de respuesta
+            String message = ""; // Mensaje vacío
+            long startTime = System.currentTimeMillis();
+            xmpp.enviarMensaje(message, destination.getEmailAddress());
+            long endTime = System.currentTimeMillis();
+
+            // Cierra el chat después de enviar el mensaje
+            xmpp.cerrarChat();
+
+            return (int) (endTime - startTime); // Devuelve el tiempo transcurrido como ping
+        } catch (SmackException.NotConnectedException | InterruptedException e) {
+            e.printStackTrace();
+            return -1; // Error al calcular el ping
+        }
+    }
+
+    // Función para obtener la tabla de enrutamiento como cadena de texto (simulación)
+    private String getRoutingTableAsString(String sourceNode) {
+        // Obtener el nodo fuente
+        Node source = getNode(sourceNode);
+
+        if (source == null) {
+            return "Nodo fuente no encontrado.";
+        }
+
+        // Inicializar una cadena de texto para la tabla de enrutamiento
+        StringBuilder routingTable = new StringBuilder();
+        routingTable.append("Destino\t\t\tPróximo Salto\t\tDistancia\n");
+
+        for (Map.Entry<String, Integer> entry : source.getNeighbors().entrySet()) {
+            String neighborName = entry.getKey();
+            int distance = entry.getValue();
+            routingTable.append(" " + sourceNode + "\t\t\t" + neighborName + "\t\t\t" + distance + "\n");
+        }
+
+        return routingTable.toString();
+    }
+
+
 
     private Map<String, Integer> computeShortestPath(Node sourceNode) {
         PriorityQueue<NodeDistance> pq = new PriorityQueue<>();
