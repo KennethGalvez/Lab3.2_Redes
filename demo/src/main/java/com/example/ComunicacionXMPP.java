@@ -80,7 +80,7 @@ public class ComunicacionXMPP {
             @Override
             public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
                 String body = message.getBody();
-                System.out.println("\nIncoming message from " + from + ": " + body);
+                System.out.println("\n\nIncoming message from " + from + ": " + body + "\n");
             }
         });
     }
