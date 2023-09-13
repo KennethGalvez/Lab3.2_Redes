@@ -19,6 +19,8 @@ import org.jxmpp.jid.impl.JidCreate;
 public class ComunicacionXMPP {
 
     private AbstractXMPPConnection connection;
+    private ChatManager chatManager;
+
 // Constructor to establish XMPP connection
     public ComunicacionXMPP(String host, int port, String domain) throws XmppStringprepException {
         XMPPTCPConnectionConfiguration config = XMPPTCPConnectionConfiguration.builder()
@@ -30,6 +32,16 @@ public class ComunicacionXMPP {
                 .build();
 
         connection = new XMPPTCPConnection(config);
+
+        // Initialize the chat manager and add the incoming message listener here
+        chatManager = ChatManager.getInstanceFor(connection);
+        chatManager.addIncomingListener(new IncomingChatMessageListener() {
+            @Override
+            public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
+                String body = message.getBody();
+                System.out.println("\n\nIncoming message from " + from + ": " + body + "\n");
+            }
+        });
     }
 
     // Logic to log in
@@ -73,18 +85,6 @@ public class ComunicacionXMPP {
         newMessage.setBody(message);
         chat.send(newMessage);
     }
-    //Method to start listening for incoming messages
-    public void startListeningForMessages() {
-        ChatManager chatManager = ChatManager.getInstanceFor(connection);
-        chatManager.addIncomingListener(new IncomingChatMessageListener() {
-            @Override
-            public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
-                String body = message.getBody();
-                System.out.println("\n\nIncoming message from " + from + ": " + body + "\n");
-            }
-        });
-    }
-
 
     public void cerrarChat() {
         // Close Smack
