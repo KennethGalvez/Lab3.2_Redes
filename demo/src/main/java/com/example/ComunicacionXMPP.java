@@ -19,7 +19,6 @@ import org.jxmpp.jid.impl.JidCreate;
 public class ComunicacionXMPP {
 
     private AbstractXMPPConnection connection;
-    private Chat chat;
 // Constructor to establish XMPP connection
     public ComunicacionXMPP(String host, int port, String domain) throws XmppStringprepException {
         XMPPTCPConnectionConfiguration config = XMPPTCPConnectionConfiguration.builder()
@@ -51,6 +50,7 @@ public class ComunicacionXMPP {
         }
     }
 
+    private Chat chat;
 // Logic to start a chat with a recipient
     public void iniciarChat(String recipient) throws SmackException.NotConnectedException, XmppStringprepException, InterruptedException {
         ChatManager chatManager = ChatManager.getInstanceFor(connection);
