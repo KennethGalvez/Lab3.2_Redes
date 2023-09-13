@@ -73,8 +73,7 @@ public class ComunicacionXMPP {
         chatManager.addIncomingListener(new IncomingChatMessageListener() {
             @Override
             public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
-                String body = message.getBody();
-                System.out.println(from + ": " + body);
+
             }
         });
 
