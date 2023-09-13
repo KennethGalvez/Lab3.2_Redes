@@ -129,7 +129,7 @@ class LinkStateRouting {
             String[] pathNodes = shortestPath.split(" -> ");
             int hopCount = 1;
             
-            System.out.println("Sending message from " + sourceNode + " to " + destinationNode + " through path: " + shortestPath);
+            System.out.println("\nSending message from " + sourceNode + " to " + destinationNode + " through path: " + shortestPath);
 
             for (int i = 0; i < pathNodes.length - 1; i++) {
                 String currentNode = pathNodes[i];
