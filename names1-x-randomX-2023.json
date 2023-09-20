@@ -1,6 +1,7 @@
 {
     "type": "names",
     "config": {
+<<<<<<< Updated upstream
       "A": "per18364@alumchat.xyz",
       "B": "rui18761@alumchat.xyz",
       "C": "smi20373@alumchat.xyz",
@@ -32,5 +33,13 @@
       "c": "gon20362@alumchat.xyz",
       "d": "ram19946@alumchat.xyz",
       "e": "lop20768@alumchat.xyz"
+=======
+      "A": "lay201281@alumchat.xyz",
+      "B": "gal20079@alumchat.xyz",
+      "C": "gir20029@alumchat.xyz",
+      "D": "dele19019@alumchat.xyz",
+      "E": "val20159@alumchat.xyz",
+      "F": "smi20373@alumchat.xyz"
+>>>>>>> Stashed changes
     }
   }
