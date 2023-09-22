@@ -11,17 +11,16 @@ import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.SmackException;
 import org.jxmpp.stringprep.XmppStringprepException;
 
-
 class Node {
     private String name;
     private String emailAddress; // Add an email address field
     private Map<String, Integer> neighbors = new HashMap<>();
-    
+
     public Node(String name, String emailAddress) {
         this.name = name;
         this.emailAddress = emailAddress;
     }
-    
+
     public String getName() {
         return name;
     }
@@ -29,11 +28,11 @@ class Node {
     public String getEmailAddress() {
         return emailAddress;
     }
-    
+
     public void addNeighbor(String neighborName, int distance) {
         neighbors.put(neighborName, distance);
     }
-    
+
     public Map<String, Integer> getNeighbors() {
         return neighbors;
     }
@@ -52,10 +51,10 @@ class Packet {
 
     public String toJson() {
         return "{\n" +
-               "\"type\": \"" + type + "\",\n" +
-               "\"headers\": " + headers.toString() + ",\n" +
-               "\"payload\": \"" + payload + "\"\n" +
-               "}";
+                "\"type\": \"" + type + "\",\n" +
+                "\"headers\": " + headers.toString() + ",\n" +
+                "\"payload\": \"" + payload + "\"\n" +
+                "}";
     }
 }
 
@@ -82,7 +81,6 @@ class LinkStateRouting {
         return network.keySet();
     }
 
-    
     public void computeShortestPaths() {
         for (Node node : network.values()) {
             Map<String, Integer> shortestPath = computeShortestPath(node);
@@ -94,37 +92,41 @@ class LinkStateRouting {
         return network.get(nodeName);
     }
 
-    public void sendPacket(String sourceNode, String destinationNode, int hopCount, String packetType, String packetPayload) {
+    public void sendPacket(String sourceNode, String destinationNode, int hopCount, String packetType,
+            String packetPayload) {
+
         Map<String, String> headers = new HashMap<>();
         headers.put("from", sourceNode);
         headers.put("to", destinationNode);
         headers.put("hop_count", Integer.toString(hopCount));
-        
-        Packet packet = new Packet(packetType, headers, packetPayload); // Usar el tipo de paquete y payload proporcionados
-        
-        System.out.println("Sending packet from " + sourceNode + " to " + destinationNode);
+
+        Packet packet = new Packet(packetType, headers, packetPayload); // Use the provided packet type and payload
+
+        System.out.println("Preparing to send packet from " + sourceNode + " to " + destinationNode);
         System.out.println(packet.toJson());
         System.out.println();
-        
-        // Send the message using the ComunicacionXMPP instance
-        Node source = getNode(sourceNode);
+
+        // Check if the user is online before sending the message
         Node destination = getNode(destinationNode);
-        String destinationEmailAddress = destination.getEmailAddress(); // Append the domain
-        
-        try {
-            xmpp.iniciarChat(destinationEmailAddress);
-            xmpp.enviarMensaje(packet.toJson(), packetPayload); // Pass both recipient and message
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Failed to send message via XMPP.");
+
+        String destinationEmailAddress = destination.getEmailAddress();
+        if (xmpp.isUserOnline(destinationEmailAddress)) {
+            try {
+                xmpp.iniciarChat(destinationEmailAddress);
+                xmpp.enviarMensaje(packet.toJson(), packetPayload); // Pass both recipient and message
+                // System.out.println("Packet sent successfully.");
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("Failed to send message via XMPP.");
+            }
+        } else {
+            System.out.println("User " + destinationNode + " is offline. Packet not sent.");
+
         }
     }
 
-
-
-
     public void sendMessage(String sourceNode, String destinationNode, String message) throws XmppStringprepException {
-    // Solicitar al usuario el tipo de paquete a enviar
+        // Solicitar al usuario el tipo de paquete a enviar
         Scanner scanner = new Scanner(System.in);
         System.out.println("Seleccione el tipo de paquete a enviar:");
         System.out.println("1. Paquete ECHO");
@@ -174,7 +176,8 @@ class LinkStateRouting {
             String[] pathNodes = shortestPath.split(" -> ");
             int hopCount = 1;
 
-            System.out.println("\nEnviando mensaje desde " + sourceNode + " a " + destinationNode + " a través del camino: " + shortestPath);
+            System.out.println("\nEnviando mensaje desde " + sourceNode + " a " + destinationNode
+                    + " a través del camino: " + shortestPath);
 
             for (int i = 0; i < pathNodes.length - 1; i++) {
                 String currentNode = pathNodes[i];
@@ -216,7 +219,8 @@ class LinkStateRouting {
         }
     }
 
-    // Función para obtener la tabla de enrutamiento como cadena de texto (simulación)
+    // Función para obtener la tabla de enrutamiento como cadena de texto
+    // (simulación)
     private String getRoutingTableAsString(String sourceNode) {
         // Obtener el nodo fuente
         Node source = getNode(sourceNode);
@@ -238,72 +242,70 @@ class LinkStateRouting {
         return routingTable.toString();
     }
 
-
-
     private Map<String, Integer> computeShortestPath(Node sourceNode) {
         PriorityQueue<NodeDistance> pq = new PriorityQueue<>();
         pq.offer(new NodeDistance(sourceNode, 0));
-        
+
         Map<String, Integer> distanceMap = new HashMap<>();
         distanceMap.put(sourceNode.getName(), 0);
-        
+
         while (!pq.isEmpty()) {
             NodeDistance nd = pq.poll();
             Node currentNode = nd.getNode();
             int currentDistance = nd.getDistance();
-            
+
             for (Map.Entry<String, Integer> neighborEntry : currentNode.getNeighbors().entrySet()) {
                 String neighborName = neighborEntry.getKey();
                 int neighborDistance = neighborEntry.getValue();
                 int newDistance = currentDistance + neighborDistance;
-                
+
                 if (!distanceMap.containsKey(neighborName) || newDistance < distanceMap.get(neighborName)) {
                     distanceMap.put(neighborName, newDistance);
                     pq.offer(new NodeDistance(network.get(neighborName), newDistance));
                 }
             }
         }
-        
+
         return distanceMap;
     }
 
-    
     public void printRoutingTable() {
         for (Node node : network.values()) {
             System.out.println("\nRouting table for Node " + node.getName() + ":");
             for (String neighborName : node.getNeighbors().keySet()) {
                 System.out.println(" Node " + node.getName() + " to " + neighborName +
-                                   ", Distance: " + shortestPaths.get(node.getName()).get(neighborName));
+                        ", Distance: " + shortestPaths.get(node.getName()).get(neighborName));
             }
             System.out.println();
         }
     }
-    
+
     public String findShortestPath(String fromNode, String toNode) {
         if (!shortestPaths.containsKey(fromNode) || !shortestPaths.get(fromNode).containsKey(toNode)) {
             return "No path found.";
         }
-        
+
         List<String> path = new ArrayList<>();
         String currentNode = toNode;
-        
+
         while (!currentNode.equals(fromNode)) {
             path.add(currentNode);
             currentNode = getPreviousNodeInPath(fromNode, currentNode);
         }
-        
+
         path.add(fromNode);
         Collections.reverse(path);
-        
+
         return String.join(" -> ", path);
     }
-    
+
     private String getPreviousNodeInPath(String sourceNode, String currentNode) {
         int shortestDistance = shortestPaths.get(sourceNode).get(currentNode);
         String previousNode = null;
 
         for (Map.Entry<String, Integer> entry : shortestPaths.get(sourceNode).entrySet()) {
-            if (network.get(currentNode).getNeighbors().containsKey(entry.getKey()) && entry.getValue() + network.get(currentNode).getNeighbors().get(entry.getKey()) == shortestDistance) {
+            if (network.get(currentNode).getNeighbors().containsKey(entry.getKey()) && entry.getValue()
+                    + network.get(currentNode).getNeighbors().get(entry.getKey()) == shortestDistance) {
                 previousNode = entry.getKey();
                 break;
             }
@@ -311,24 +313,23 @@ class LinkStateRouting {
         return previousNode;
     }
 
-
     private static class NodeDistance implements Comparable<NodeDistance> {
         private Node node;
         private int distance;
-        
+
         public NodeDistance(Node node, int distance) {
             this.node = node;
             this.distance = distance;
         }
-        
+
         public Node getNode() {
             return node;
         }
-        
+
         public int getDistance() {
             return distance;
         }
-        
+
         @Override
         public int compareTo(NodeDistance other) {
             return Integer.compare(this.distance, other.distance);
@@ -356,7 +357,7 @@ public class LinkStateRoutingMain {
                 System.out.println("Login failed. Exiting.");
                 return;
             }
-            
+
             // Read the username-to-node mapping from names1-x-randomX-2023.json
             String sourceNode = getUsernameMapping(username);
             if (sourceNode == null) {
@@ -417,10 +418,10 @@ public class LinkStateRoutingMain {
                             // Mostrar nodos
                             System.out.println("\nAvailable  nodes:");
                             for (String nodeName : router.getNodeNames()) {
-                                
+
                                 Node node = router.getNode(nodeName);
                                 System.out.println(nodeName + " (" + node.getEmailAddress() + ")");
-                              
+
                             }
                             break;
                         case 2:

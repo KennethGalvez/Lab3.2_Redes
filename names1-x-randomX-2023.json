@@ -1,45 +1,8 @@
 {
-    "type": "names",
-    "config": {
-<<<<<<< Updated upstream
-      "A": "per18364@alumchat.xyz",
-      "B": "rui18761@alumchat.xyz",
-      "C": "smi20373@alumchat.xyz",
-      "D": "per20204@alumchat.xyz",
-      "E": "elv20725@alumchat.xyz",
-      "F": "mom20067@alumchat.xyz",
-      "G": "val20441@alumchat.xyz",
-      "H": "cab20009@alumchat.xyz",
-      "I": "mon20309@alumchat.xyz",
-      "J": "esc20936@alumchat.xyz",
-      "K": "dele19019@alumchat.xyz",
-      "L": "san20226@alumchat.xyz",
-      "M": "san191517@alumchat.xyz",
-      "N": "gir20029@alumchat.xyz",
-      "O": "val20159@alumchat.xyz",
-      "P": "arr20188@alumchat.xyz",
-      "Q": "her20053@alumchat.xyz",
-      "R": "pag20634@alumchat.xyz",
-      "S": "gon20335@alumchat.xyz",
-      "T": "mol20211@alumchat.xyz",
-      "U": "guz20262@alumchat.xyz",
-      "V": "lay201281@alumchat.xyz",
-      "W": "dav201055@alumchat.xyz",
-      "X": "gon20008@alumchat.xyz",
-      "Y": "vel201011@alumchat.xyz",
-      "Z": "gal20079@alumchat.xyz",
-      "a": "rio20979@alumchat.xyz",
-      "b": "hig20460@alumchat.xyz",
-      "c": "gon20362@alumchat.xyz",
-      "d": "ram19946@alumchat.xyz",
-      "e": "lop20768@alumchat.xyz"
-=======
-      "A": "lay201281@alumchat.xyz",
-      "B": "gal20079@alumchat.xyz",
-      "C": "gir20029@alumchat.xyz",
-      "D": "dele19019@alumchat.xyz",
-      "E": "val20159@alumchat.xyz",
-      "F": "smi20373@alumchat.xyz"
->>>>>>> Stashed changes
+      "type": "names",
+      "config": {
+        "A": "gir20029@alumchat.xyz",
+        "B": "gal20079@alumchat.xyz",
+        "C": "smi20373@alumchat.xyz"
+      }
     }
-  }

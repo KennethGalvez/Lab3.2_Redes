@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
@@ -13,6 +14,8 @@ import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.roster.Roster;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.impl.JidCreate;
 
@@ -21,7 +24,7 @@ public class ComunicacionXMPP {
     private AbstractXMPPConnection connection;
     private ChatManager chatManager;
 
-// Constructor to establish XMPP connection
+    // Constructor to establish XMPP connection
     public ComunicacionXMPP(String host, int port, String domain) throws XmppStringprepException {
         XMPPTCPConnectionConfiguration config = XMPPTCPConnectionConfiguration.builder()
                 .setHost(host)
@@ -42,7 +45,7 @@ public class ComunicacionXMPP {
                 System.out.println("\n\nIncoming message from " + from + ": " + body + "\n");
             }
         });
-    }    
+    }
 
     // Logic to log in
     public boolean iniciarSesion(String username, String password) {
@@ -55,7 +58,8 @@ public class ComunicacionXMPP {
             return false;
         }
     }
-// Logic to close the connection
+
+    // Logic to close the connection
     public void cerrarConexion() {
         if (connection != null && connection.isConnected()) {
             connection.disconnect();
@@ -63,10 +67,12 @@ public class ComunicacionXMPP {
     }
 
     private Chat chat;
-// Logic to start a chat with a recipient
-    public void iniciarChat(String recipient) throws SmackException.NotConnectedException, XmppStringprepException, InterruptedException {
+
+    // Logic to start a chat with a recipient
+    public void iniciarChat(String recipient)
+            throws SmackException.NotConnectedException, XmppStringprepException, InterruptedException {
         ChatManager chatManager = ChatManager.getInstanceFor(connection);
-        EntityBareJid jid = JidCreate.entityBareFrom(recipient ); //Addres of the other user
+        EntityBareJid jid = JidCreate.entityBareFrom(recipient); // Addres of the other user
         chat = chatManager.chatWith(jid);
 
         // listener to incoming message
@@ -79,7 +85,8 @@ public class ComunicacionXMPP {
 
     }
 
-    public void enviarMensaje(String message, String message2) throws SmackException.NotConnectedException, InterruptedException {
+    public void enviarMensaje(String message, String message2)
+            throws SmackException.NotConnectedException, InterruptedException {
         Message newMessage = new Message();
         newMessage.setBody(message);
         chat.send(newMessage);
@@ -87,6 +94,17 @@ public class ComunicacionXMPP {
 
     public void cerrarChat() {
         // Close Smack
+    }
+
+    public boolean isUserOnline(String jid) {
+        try {
+            Roster roster = Roster.getInstanceFor((XMPPConnection) connection);
+            Presence presence = roster.getPresence(JidCreate.entityBareFrom(jid));
+            return (presence.getType() == Presence.Type.available);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
 }
