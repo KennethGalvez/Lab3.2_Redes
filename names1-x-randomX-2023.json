@@ -1,8 +1,11 @@
 {
-      "type": "names",
-      "config": {
-        "A": "gir20029@alumchat.xyz",
-        "B": "gal20079@alumchat.xyz",
-        "C": "smi20373@alumchat.xyz"
-      }
-    }
+  "type": "names",
+  "config": {
+    "A": "lay201281@alumchat.xyz",
+    "B": "gal20079@alumchat.xyz",
+    "C": "gir20029@alumchat.xyz",
+    "D": "dele19019@alumchat.xyz",
+    "E": "val20159@alumchat.xyz",
+    "F": "smi20373@alumchat.xyz"
+  }
+}
