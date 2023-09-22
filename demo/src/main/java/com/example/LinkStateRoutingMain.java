@@ -125,49 +125,60 @@ class LinkStateRouting {
         }
     }
 
-    public void sendMessage(String sourceNode, String destinationNode, String message) throws XmppStringprepException {
-        // Solicitar al usuario el tipo de paquete a enviar
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Seleccione el tipo de paquete a enviar:");
-        System.out.println("1. Paquete ECHO");
-        System.out.println("2. Paquete DATA");
-        System.out.println("3. Paquete TABLE/INFO");
-        System.out.print("Ingrese el número correspondiente al tipo de paquete: ");
+public void sendMessage(String sourceNode, String destinationNode, String message) throws XmppStringprepException {
+    // Solicitar al usuario el tipo de paquete a enviar
+    Scanner scanner = new Scanner(System.in);
+    System.out.println("Seleccione el tipo de paquete a enviar:");
+    System.out.println("1. Paquete ECHO");
+    System.out.println("2. Paquete DATA");
+    System.out.println("3. Paquete TABLE/INFO");
+    System.out.print("Ingrese el número correspondiente al tipo de paquete: ");
 
-        int packetTypeChoice = scanner.nextInt();
-        scanner.nextLine(); // Consumir el salto de línea
+    int packetTypeChoice = scanner.nextInt();
+    scanner.nextLine(); // Consumir el salto de línea
 
-        String packetType;
-        String packetPayload;
+    String packetType;
+    String packetPayload;
 
-        // Definir el tipo de paquete y su payload según la elección del usuario
-        switch (packetTypeChoice) {
-            case 1:
-                packetType = "ECHO";
-                long startTime = System.currentTimeMillis();
-                int delay = calculateDelayBetweenNodes(sourceNode, destinationNode);
-                packetPayload = "ECHO_DELAY: " + delay + " ms";
-                long endTime = System.currentTimeMillis();
-                long executionTime = endTime - startTime;
-                System.out.println("Tiempo de ejecución (ms): " + executionTime);
-                break;
-            case 2:
-                packetType = "DATA";
-                packetPayload = "DATA_MESSAGE: " + message;
-                break;
-            case 3:
-                packetType = "TABLE/INFO";
-                String routingTable = getRoutingTableAsString(sourceNode);
-                packetPayload = "ROUTING_TABLE:\n" + routingTable;
-                System.out.println("Tabla de enrutamiento:\n" + routingTable);
-                break;
-            default:
-                System.out.println("Opción no válida. Se enviará un paquete DATA por defecto.");
-                packetType = "DATA";
-                packetPayload = "DATA_MESSAGE: " + message;
-                break;
-        }
+    // Definir el tipo de paquete y su payload según la elección del usuario
+    switch (packetTypeChoice) {
+        case 1:
+            packetType = "ECHO";
+            long startTime = System.currentTimeMillis();
+            int delay = calculateDelayBetweenNodes(sourceNode, destinationNode);
+            packetPayload = "ECHO_DELAY: " + delay + " ms";
+            long endTime = System.currentTimeMillis();
+            long executionTime = endTime - startTime;
+            System.out.println("Tiempo de ejecución (ms): " + executionTime);
+            break;
+        case 2:
+            packetType = "DATA";
+            packetPayload = "DATA_MESSAGE: " + message;
+            break;
+        case 3:
+            packetType = "TABLE/INFO";
+            String routingTable = getRoutingTableAsString(sourceNode);
+            packetPayload = "ROUTING_TABLE:\n" + routingTable;
+            System.out.println("Tabla de enrutamiento:\n" + routingTable);
+            break;
+        default:
+            System.out.println("Opción no válida. Se enviará un paquete DATA por defecto.");
+            packetType = "DATA";
+            packetPayload = "DATA_MESSAGE: " + message;
+            break;
+    }
 
+    // Solicitar al usuario el método de enrutamiento
+    System.out.println("Seleccione el método de enrutamiento:");
+    System.out.println("1. Link State Routing");
+    System.out.println("2. Flooding");
+    System.out.print("Ingrese el número correspondiente al método de enrutamiento: ");
+
+    int routingChoice = scanner.nextInt();
+    scanner.nextLine(); // Consumir el salto de línea
+
+    if (routingChoice == 1) {
+        // Utilizar Link State Routing
         String shortestPath = findShortestPath(sourceNode, destinationNode);
 
         if (shortestPath.equals("No path found.")) {
@@ -186,6 +197,23 @@ class LinkStateRouting {
                 // Enviar el paquete con el tipo y payload correspondientes
                 sendPacket(currentNode, nextNode, hopCount, packetType, packetPayload);
                 hopCount++;
+            }
+        }
+    } else if (routingChoice == 2) {
+        // Utilizar Flooding
+        sendPacketToAllNodes(sourceNode, packetType, packetPayload);
+    } else {
+        System.out.println("Opción no válida. No se enviará ningún mensaje.");
+    }
+}
+
+    private void sendPacketToAllNodes(String sourceNode, String packetType, String packetPayload) {
+        System.out.println("\nEnviando mensaje desde " + sourceNode + " a todos los nodos de la topología:");
+
+        for (String destination : getNodeNames()) {
+            if (!destination.equals(sourceNode)) {
+                // Enviar el paquete con el tipo y payload correspondientes a todos los nodos excepto al origen
+                sendPacket(sourceNode, destination, 1, packetType, packetPayload);
             }
         }
     }
