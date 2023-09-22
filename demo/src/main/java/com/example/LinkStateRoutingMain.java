@@ -444,7 +444,7 @@ public class LinkStateRoutingMain {
                     switch (opcion) {
                         case 1:
                             // Mostrar nodos
-                            System.out.println("\nAvailable  nodes:");
+                            System.out.println("\nUploaded  nodes:");
                             for (String nodeName : router.getNodeNames()) {
 
                                 Node node = router.getNode(nodeName);
